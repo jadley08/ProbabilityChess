@@ -191,6 +191,18 @@
         (posn 2 1)
         (posn 2 -1)))
 
+(define diagonal-moves-ls
+  (list (posn -1 -1)
+        (posn -1 1)
+        (posn 1 -1)
+        (posn 1 1)))
+
+(define perpendicular-moves-ls
+  (list (posn 1 0)
+        (posn -1 0)
+        (posn 0 1)
+        (posn 0 -1)))
+
 (define black-pieces
   (list
    (piece "pawn"
@@ -554,7 +566,12 @@
                                  (cons next-posn
                                        (helper next-x next-y (sub1 range-left)))
                                  '())]
-                    [else '()])))])
+                    [else (if piece-at-next
+                              (if can-move-next
+                                  (list next-posn)
+                                  '())
+                              (cons next-posn
+                                    (helper next-x next-y (sub1 range-left))))])))])
       (helper (posn-x (piece-location p)) (posn-y (piece-location p)) (move-type-range (piece-class p))))))
 
 (define generate-possible-moves-with-incr-posn-ls
@@ -632,15 +649,13 @@
                        (append advance-direction capture-direction en-passant-direction))]
                     [else
                      (let* ([perpendicular-moves (if p-perpendicular?
-                                                     '()
+                                                     (generate-possible-moves-with-incr-posn-ls p perpendicular-moves-ls pieces)
                                                      '())]
                             [diagonal-moves (if p-diagonal?
-                                                '()
+                                                (generate-possible-moves-with-incr-posn-ls p diagonal-moves-ls pieces)
                                                 '())]
                             [knight-moves (if p-knight?
-                                              (begin
-                                                (println (generate-possible-moves-with-incr-posn-ls p knight-moves-ls pieces))
-                                                (generate-possible-moves-with-incr-posn-ls p knight-moves-ls pieces))
+                                              (generate-possible-moves-with-incr-posn-ls p knight-moves-ls pieces)
                                               '())])
                        (append perpendicular-moves diagonal-moves knight-moves))]))])
         (helper)))))
@@ -818,9 +833,11 @@
                     (set! highlight #f)
                     (move-piece x y pieces))
                   (begin
-                    (set! highlight #t)
-                    (set! highlight-posn (posn x y))
-                    (highlight-moves x y pieces)
+                    (if (highlight-moves x y pieces)
+                        (begin
+                          (set! highlight #t)
+                          (set! highlight-posn (posn x y)))
+                        (void))
                     pieces))
               pieces))
         pieces)))
@@ -879,6 +896,4 @@
           knight-moves
           100
           #f))
-
-  (println (generate-possible-moves-with-incr-posn-ls knight1 knight-moves-ls '()))
 )
