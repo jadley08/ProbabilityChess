@@ -33,8 +33,8 @@
 (define BLACK-PIECE-COLOR "black")
 (define PIECE-SIZE (* SQUARE-DIM (/ 3 4)))
 (define turn "white")
-(define PIECE-HIGHLIGHT-COLOR (make-color 255 255 0 50))
-(define MOVE-HIGHLIGHT-COLOR (make-color 255 255 0 25))
+; list that piece of highlight-posn
+(define highlight-move-to '())
 
 (define change-turn
   (λ ()
@@ -86,6 +86,31 @@
 (struct posn
   (x
    y))
+
+                                                                                                  
+;                                                                                                                   
+;                                                                            ;                                      
+;                                                                            ;                                      
+;                                                        ;             ;     ;                                      
+;                                                                            ;;                                     
+;                                                                            ;;;                                    
+;                                                            ;             ;;;;                                     
+;       ;;  ;;        ;;;;   ;        ;;;;               ;   ;   ;;    ;     ;;     ;;;;                            
+;     ;; ;  ; ;     ;;    ;  ;   ;;  ;;  ;               ;   ;   ; ;   ;     ;;    ;;                               
+;     ;; ; ;  ;    ;;     ;  ;  ;    ;    ;              ;   ;  ;  ;   ;     ;;   ;                                 
+;     ;   ;;  ;   ;;      ;  ; ;;   ;    ;;              ;   ; ;   ;   ;      ;   ;                                 
+;     ;   ;;  ;   ;       ;  ;;;    ;;;;;                ;    ;;   ;   ;      ;    ;;                               
+;     ;   ;   ;   ;       ;  ;;     ;                    ;    ;    ;   ;      ;      ;;      ;        ;        ;    
+;     ;   ;   ;   ;      ;    ;     ;      ;             ;    ;    ;   ;      ;        ;    ;;;      ;;;      ;;;   
+;     ;   ;   ;   ;      ;    ;      ;   ;;              ;    ;    ;   ;      ;        ;   ;;;;     ;;;;     ;;;;   
+;     ;   ;   ;    ;    ;     ;       ;;;;               ;    ;    ;   ;      ;   ;;  ;;   ;; ;     ;; ;     ;; ;   
+;                   ;;;;                                                           ;;;;    ;;;      ;;;      ;;;    
+;                                                                                                                   
+;                                                                                                                   
+(define PIECE-HIGHLIGHT-COLOR (make-color 255 255 0 100))
+(define MOVE-HIGHLIGHT-COLOR (make-color 255 255 0 25))
+(define highlight #f)
+(define highlight-posn (posn -1 -1))
 
 
 (define knight-moves
@@ -447,6 +472,13 @@
                        (cond
                          [(> y 7) (empty-scene WIDTH HEIGHT)]
                          [(> x 7) (helper 0 (add1 y))]
+                         [(and highlight
+                               (eqv? x (posn-x highlight-posn))
+                               (eqv? y (posn-y highlight-posn))
+                               (draw-square x
+                                            y
+                                            PIECE-HIGHLIGHT-COLOR
+                                            (draw-square x y (get-square-color x y) (helper (add1 x) y))))]
                          [else (draw-square x y (get-square-color x y) (helper (add1 x) y))]))])
       (helper 0 0))))
 
@@ -456,7 +488,6 @@
     (cond
       [(null? pieces) (draw-empty-board)]
       [else
-       (println "drew")
        (let* ([p (car pieces)]
               [p-loc (piece-location p)]
               [p-x (posn-x p-loc)]
@@ -488,18 +519,6 @@
 ;     ;   ;   ;    ;    ;   ;  ;  ;   ;;  ;;    ;;;;   
 ;                   ;;;;     ;;   ;    ;;;;            
 ;
-(define highlight-square
-  (λ (x y pieces)
-    (println pieces)
-    (draw-square
-     x
-     y
-     PIECE-HIGHLIGHT-COLOR
-     (draw-square
-      x
-      y
-      (get-square-color x y)
-      (draw-board pieces)))))
 
 ; left click: deterministic moves
 ; right click: quantum moves
@@ -513,7 +532,10 @@
         (let ([x (exact-floor (/ x SQUARE-DIM))]
               [y (exact-floor (/ y SQUARE-DIM))])
           (if (and (< x 8) (> x -1) (< y 8) (> y -1))
-              (highlight-square x y pieces)
+              (begin
+                (set! highlight #t)
+                (set! highlight-posn (posn x y))
+                pieces)
               pieces))
         pieces)))
 
