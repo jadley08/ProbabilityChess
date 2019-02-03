@@ -620,16 +620,17 @@
                                                (posn (add1 p-x) (add1 p-y)))]
                             [piece-at-capture-move1 (piece-at-posn capture-move1 pieces)]
                             [piece-at-capture-move2 (piece-at-posn capture-move2 pieces)]
-                            [capture-direction1 (if piece-at-capture-move1
+                            [capture-direction1 (if (and piece-at-capture-move1 (not (same-side p piece-at-capture-move1)))
                                                     (list capture-move1)
                                                     '())]
-                            [capture-direction2 (if piece-at-capture-move2
+                            [capture-direction2 (if (and piece-at-capture-move2 (not (same-side p piece-at-capture-move2)))
                                                     (list capture-move2)
                                                     '())]
                             [capture-direction (append capture-direction1 capture-direction2)]
                             [piece-adjacent-left (piece-at-xy (sub1 p-x) p-y pieces)]
                             [piece-adjacent-right (piece-at-xy (add1 p-x) p-y pieces)]
                             [left-en-passant (if (and piece-adjacent-left
+                                                      (not (same-side p piece-adjacent-left))
                                                       (pawn? piece-adjacent-left)
                                                       (pawn-double-move-last? piece-adjacent-left))
                                                  (list (posn (sub1 p-x)
@@ -638,6 +639,7 @@
                                                                  (add1 p-y))))
                                                  '())]
                             [right-en-passant (if (and piece-adjacent-right
+                                                       (not (same-side p piece-adjacent-right))
                                                        (pawn? piece-adjacent-right)
                                                        (pawn-double-move-last? piece-adjacent-right))
                                                   (list (posn (add1 p-x)
