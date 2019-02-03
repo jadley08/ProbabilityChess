@@ -79,10 +79,6 @@
    knight?
    range))
 
-(struct move
-  (x
-   y))
-
 (struct posn
   (x
    y))
@@ -108,9 +104,10 @@
 ;                                                                                                                   
 ;                                                                                                                   
 (define PIECE-HIGHLIGHT-COLOR (make-color 255 255 0 100))
-(define MOVE-HIGHLIGHT-COLOR (make-color 255 255 0 25))
+(define MOVE-HIGHLIGHT-COLOR (make-color 255 255 0 50))
 (define highlight #f)
 (define highlight-posn (posn -1 -1))
+(define highlight-move-posns '())
 
 
 (define knight-moves
@@ -179,112 +176,112 @@
   (list
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 0 1)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 1 1)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 2 1)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 3 1)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 4 1)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 5 1)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 6 1)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "white"
+          "black"
           (posn 7 1)
           pawn-moves
           100
           #f)
    (piece "rook"
           "♜"
-          "white"
+          "black"
           (posn 0 0)
           rook-moves
           100
           #f)
    (piece "knight"
           "♞"
-          "white"
+          "black"
           (posn 1 0)
           knight-moves
           100
           #f)
    (piece "bishop"
           "♝"
-          "white"
+          "black"
           (posn 2 0)
           bishop-moves
           100
           #f)
    (piece "queen"
           "♛"
-          "white"
+          "black"
           (posn 3 0)
           queen-moves
           100
           #f)
    (piece "king"
           "♚"
-          "white"
+          "black"
           (posn 4 0)
           king-moves
           100
           #f)
    (piece "bishop"
           "♝"
-          "white"
+          "black"
           (posn 5 0)
           bishop-moves
           100
           #f)
    (piece "knight"
           "♞"
-          "white"
+          "black"
           (posn 6 0)
           knight-moves
           100
           #f)
    (piece "rook"
           "♜"
-          "white"
+          "black"
           (posn 7 0)
           rook-moves
           100
@@ -294,112 +291,112 @@
   (list
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 0 6)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 1 6)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 2 6)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 3 6)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 4 6)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 5 6)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 6 6)
           pawn-moves
           100
           #f)
    (piece "pawn"
           "♟"
-          "black"
+          "white"
           (posn 7 6)
           pawn-moves
           100
           #f)
    (piece "rook"
           "♜"
-          "black"
+          "white"
           (posn 0 7)
           rook-moves
           100
           #f)
    (piece "knight"
           "♞"
-          "black"
+          "white"
           (posn 1 7)
           knight-moves
           100
           #f)
    (piece "bishop"
           "♝"
-          "black"
+          "white"
           (posn 2 7)
           bishop-moves
           100
           #f)
    (piece "queen"
           "♛"
-          "black"
+          "white"
           (posn 3 7)
           queen-moves
           100
           #f)
    (piece "king"
           "♚"
-          "black"
+          "white"
           (posn 4 7)
           king-moves
           100
           #f)   
    (piece "bishop"
           "♝"
-          "black"
+          "white"
           (posn 5 7)
           bishop-moves
           100
           #f)
    (piece "knight"
           "♞"
-          "black"
+          "white"
           (posn 6 7)
           knight-moves
           100
           #f)
    (piece "rook"
           "♜"
-          "black"
+          "white"
           (posn 7 7)
           rook-moves
           100
@@ -429,10 +426,81 @@
 ;                             ;                                
 ;                             ;                                
 ;                             ;
+(define piece-at
+  (λ (x y pieces)
+    (cond
+      [(null? pieces) #f]
+      [else (let* ([p (car pieces)]
+                   [p-posn (piece-location p)]
+                   [p-x (posn-x p-posn)]
+                   [p-y (posn-y p-posn)])
+              (if (and (eqv? x p-x)
+                       (eqv? y p-y))
+                  p
+                  (piece-at x y (cdr pieces))))])))
+
+#|
+(struct piece
+  (name
+   symbol
+   side
+   location
+   class
+   exist-pct
+   moved?))
+(struct move-type
+  (pawn?
+   perpendicular?
+   diagonal?
+   knight?
+   range))
+|#
+
+(define get-all-possible-moves
+  (λ (p)
+    (let ([p-x (posn-x (piece-location p))]
+          [p-y (posn-y (piece-location p))]
+          [p-side (piece-side p)]
+          [p-pct (piece-exist-pct p)]
+          [p-moved? (piece-moved? p)]
+          [p-pawn? (move-type-pawn? (piece-class p))]
+          [p-perpendicular? (move-type-perpendicular? (piece-class p))]
+          [p-diagonal? (move-type-diagonal? (piece-class p))]
+          [p-knight? (move-type-knight? (piece-class p))]
+          [p-range (move-type-range (piece-class p))])
+      (letrec ([helper
+                (λ ()
+                  (cond
+                    [p-pawn?
+                     (cons (posn p-x (if (eqv? p-side "white")
+                                         (sub1 p-y)
+                                         (add1 p-y)))
+                           (if (not p-moved?)
+                               (list (posn p-x (if (eqv? p-side "white")
+                                                   (sub1 (sub1 p-y))
+                                                   (add1 (add1 p-y)))))
+                               '()))]
+                    [else 'todo]))])
+        (helper)))))
+
+(define highlight-moves
+  (λ (x y pieces)
+    (println highlight-move-posns)
+    (let ([p (piece-at x y pieces)])
+      (if p
+          (set! highlight-move-posns (get-all-possible-moves p))
+          #f))))
+
+(define xy-member-posn-ls?
+  (λ (x y posn-ls)
+    (cond
+      [(null? posn-ls) #f]
+      [(and (eqv? x (posn-x (car posn-ls)))
+            (eqv? y (posn-y (car posn-ls)))) #t]
+      [else (xy-member-posn-ls? x y (cdr posn-ls))])))
 
 
 
-                                 
 ;           ;                             
 ;           ;                             
 ;           ;                             
@@ -479,6 +547,12 @@
                                             y
                                             PIECE-HIGHLIGHT-COLOR
                                             (draw-square x y (get-square-color x y) (helper (add1 x) y))))]
+                         [(and highlight
+                               (xy-member-posn-ls? x y highlight-move-posns))
+                          (draw-square x
+                                       y
+                                       MOVE-HIGHLIGHT-COLOR
+                                       (draw-square x y (get-square-color x y) (helper (add1 x) y)))]
                          [else (draw-square x y (get-square-color x y) (helper (add1 x) y))]))])
       (helper 0 0))))
 
@@ -506,7 +580,7 @@
           (+ (* p-y SQUARE-DIM) OFFSET)
           (draw-board (cdr pieces))))])))
 
-                                            
+   
 ;                                                      
 ;       ;;  ;;        ;;;;  ;     ;     ;;;;    ;;;;   
 ;     ;; ;  ; ;     ;;    ; ;     ;    ;;      ;;  ;   
@@ -535,11 +609,12 @@
               (begin
                 (set! highlight #t)
                 (set! highlight-posn (posn x y))
+                (highlight-moves x y pieces)
                 pieces)
               pieces))
         pieces)))
 
-                                                                          
+       
 ;                                                                                  
 ;     ;;;;;    ;                              ;;;;;                                
 ;    ;;   ;                                  ;;   ;                                
@@ -558,7 +633,6 @@
 ;                    ;    ;                                                 ;    ; 
 ;                     ;;  ;                                                  ;;  ; 
 ;                       ;;;                                                    ;;; 
-
 (big-bang board-init
           (to-draw draw-board)
           (on-mouse mouse-controls))
