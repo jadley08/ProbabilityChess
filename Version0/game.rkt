@@ -33,8 +33,6 @@
 (define BLACK-PIECE-COLOR "black")
 (define PIECE-SIZE (* SQUARE-DIM (/ 3 4)))
 (define turn "white")
-; list that piece of highlight-posn
-(define highlight-move-to '())
 
 (define change-turn
   (λ ()
@@ -439,23 +437,6 @@
                   p
                   (piece-at x y (cdr pieces))))])))
 
-#|
-(struct piece
-  (name
-   symbol
-   side
-   location
-   class
-   exist-pct
-   moved?))
-(struct move-type
-  (pawn?
-   perpendicular?
-   diagonal?
-   knight?
-   range))
-|#
-
 (define get-all-possible-moves
   (λ (p)
     (let ([p-x (posn-x (piece-location p))]
@@ -498,6 +479,57 @@
       [(and (eqv? x (posn-x (car posn-ls)))
             (eqv? y (posn-y (car posn-ls)))) #t]
       [else (xy-member-posn-ls? x y (cdr posn-ls))])))
+
+(define remove-piece
+  (λ (p pieces)
+    (let ([p-x (posn-x (piece-location p))]
+          [p-y (posn-y (piece-location p))])
+      (letrec ([helper
+                (λ (pieces)
+                  (cond
+                    [(null? pieces) '()]
+                    [(and (eqv? p-x (posn-x (piece-location (car pieces))))
+                          (eqv? p-y (posn-y (piece-location (car pieces)))))
+                     (cdr pieces)]
+                    [else
+                     (cons (car pieces) (helper (cdr pieces)))]))])
+        (helper pieces)))))
+#|
+(struct piece
+  (name
+   symbol
+   side
+   location
+   class
+   exist-pct
+   moved?))
+(struct move-type
+  (pawn?
+   perpendicular?
+   diagonal?
+   knight?
+   range))
+|#
+(define piece-copy-move
+  (λ (x y p)
+    (piece
+     (piece-name p)
+     (piece-symbol p)
+     (piece-side p)
+     (posn x y)
+     (piece-class p)
+     (piece-exist-pct p)
+     #t)))
+
+(define move-piece
+  (λ (x y pieces)
+    (let* ([p-posn highlight-posn]
+           [p (piece-at (posn-x p-posn) (posn-y p-posn) pieces)])
+      (if p
+          (begin
+            (set! highlight #f)
+            (cons (piece-copy-move x y p) (remove-piece p pieces)))
+          pieces))))
 
 
 
@@ -606,11 +638,13 @@
         (let ([x (exact-floor (/ x SQUARE-DIM))]
               [y (exact-floor (/ y SQUARE-DIM))])
           (if (and (< x 8) (> x -1) (< y 8) (> y -1))
-              (begin
-                (set! highlight #t)
-                (set! highlight-posn (posn x y))
-                (highlight-moves x y pieces)
-                pieces)
+              (if highlight
+                  (move-piece x y pieces)
+                  (begin
+                    (set! highlight #t)
+                    (set! highlight-posn (posn x y))
+                    (highlight-moves x y pieces)
+                    pieces))
               pieces))
         pieces)))
 
