@@ -3,7 +3,8 @@
 (require
   2htdp/batch-io
   2htdp/image
-  2htdp/universe)
+  2htdp/universe
+  unstable/custom-write)
 
 
 ;                                           ;                          ;           
@@ -69,23 +70,27 @@
    location
    class
    exist-pct
-   pawn-info))
+   pawn-info)
+  #:property prop:auto-custom-write 'constructor)
 
 (struct pawns
   (moved?
    double-move-last-turn?
-   turn-of-double))
+   turn-of-double)
+  #:property prop:auto-custom-write 'constructor)
 
 (struct move-type
   (pawn?
    perpendicular?
    diagonal?
    knight?
-   range))
+   range)
+  #:property prop:auto-custom-write 'constructor)
 
 (struct posn
   (x
-   y))
+   y)
+  #:property prop:auto-custom-write 'constructor)
 
                                                                                                   
 ;                                                                                                                   
@@ -175,7 +180,17 @@
 ;    ;    ;    ;   ;      ;        ; 
 ;    ;    ;    ;   ;      ;   ;;  ;; 
 ;                              ;;;;  
-;                                    
+;
+(define knight-moves-ls
+  (list (posn -2 1)
+        (posn -2 -1)
+        (posn -1 2)
+        (posn -1 -2)
+        (posn 1 2)
+        (posn 1 -2)
+        (posn 2 1)
+        (posn 2 -1)))
+
 (define black-pieces
   (list
    (piece "pawn"
@@ -528,15 +543,17 @@
               (λ (x y range-left)
                 (let* ([next-x (+ x incr-x)]
                        [next-y (+ y incr-y)]
-                       [next-posn (posn x y)]
+                       [next-posn (posn next-x next-y)]
                        [piece-at-next (piece-at-posn next-posn pieces)]
-                       [same-side-as-next? (same-side p piece-at-next)])
+                       [can-move-next (if piece-at-next
+                                          (not (same-side p piece-at-next))
+                                          #t)])
                   (cond
                     [(or (< x 0) (> x 7) (< y 0) (> y 7) (eqv? range-left 0)) '()]
-                    [knight? (if same-side-as-next?
-                                 '()
+                    [knight? (if can-move-next
                                  (cons next-posn
-                                       (helper next-x next-y (sub1 range-left))))]
+                                       (helper next-x next-y (sub1 range-left)))
+                                 '())]
                     [else '()])))])
       (helper (posn-x (piece-location p)) (posn-y (piece-location p)) (move-type-range (piece-class p))))))
 
@@ -621,15 +638,9 @@
                                                 '()
                                                 '())]
                             [knight-moves (if p-knight?
-                                              (let ([possible-moves (list (posn -2 1)
-                                                                          (posn -2 -1)
-                                                                          (posn -1 2)
-                                                                          (posn -1 -2)
-                                                                          (posn 1 2)
-                                                                          (posn 1 -2)
-                                                                          (posn 2 1)
-                                                                          (posn 2 -1))])
-                                                (generate-possible-moves-with-incr-posn-ls p possible-moves pieces))
+                                              (begin
+                                                (println (generate-possible-moves-with-incr-posn-ls p knight-moves-ls pieces))
+                                                (generate-possible-moves-with-incr-posn-ls p knight-moves-ls pieces))
                                               '())])
                        (append perpendicular-moves diagonal-moves knight-moves))]))])
         (helper)))))
@@ -856,7 +867,18 @@
 ;       ;    ;   ;;        ;      ;        ; 
 ;       ;     ;;;;    ;;  ;;      ;   ;;  ;; 
 ;                      ;;;;            ;;;;  
-;                                            
+;
 (module+ test
   (require rackunit)
+  
+  (define knight1
+    (piece "knight"
+          "♞"
+          "black"
+          (posn 3 3)
+          knight-moves
+          100
+          #f))
+
+  (println (generate-possible-moves-with-incr-posn-ls knight1 knight-moves-ls '()))
 )
