@@ -466,7 +466,6 @@
 
 (define highlight-moves
   (λ (x y pieces)
-    (println highlight-move-posns)
     (let ([p (piece-at x y pieces)])
       (if p
           (set! highlight-move-posns (get-all-possible-moves p))
@@ -479,6 +478,10 @@
       [(and (eqv? x (posn-x (car posn-ls)))
             (eqv? y (posn-y (car posn-ls)))) #t]
       [else (xy-member-posn-ls? x y (cdr posn-ls))])))
+
+(define member-posn-ls?
+  (λ (psn posn-ls)
+    (xy-member-posn-ls? (posn-x psn) (posn-y psn) posn-ls)))
 
 (define remove-piece
   (λ (p pieces)
@@ -494,22 +497,7 @@
                     [else
                      (cons (car pieces) (helper (cdr pieces)))]))])
         (helper pieces)))))
-#|
-(struct piece
-  (name
-   symbol
-   side
-   location
-   class
-   exist-pct
-   moved?))
-(struct move-type
-  (pawn?
-   perpendicular?
-   diagonal?
-   knight?
-   range))
-|#
+
 (define piece-copy-move
   (λ (x y p)
     (piece
@@ -525,11 +513,11 @@
   (λ (x y pieces)
     (let* ([p-posn highlight-posn]
            [p (piece-at (posn-x p-posn) (posn-y p-posn) pieces)])
-      (if p
+      (if (and p (xy-member-posn-ls? x y highlight-move-posns))
           (begin
-            (set! highlight #f)
             (cons (piece-copy-move x y p) (remove-piece p pieces)))
-          pieces))))
+          (begin
+            pieces)))))
 
 
 
@@ -639,7 +627,9 @@
               [y (exact-floor (/ y SQUARE-DIM))])
           (if (and (< x 8) (> x -1) (< y 8) (> y -1))
               (if highlight
-                  (move-piece x y pieces)
+                  (begin
+                    (set! highlight #f)
+                    (move-piece x y pieces))
                   (begin
                     (set! highlight #t)
                     (set! highlight-posn (posn x y))
