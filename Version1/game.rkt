@@ -505,6 +505,16 @@
 ;                             ;                                
 ;                             ;                                
 ;                             ;
+(define white-turn?
+  (λ ()
+    (eqv? 0 (modulo turn-count 2))))
+
+(define whose-turn
+  (λ ()
+    (if white-turn?
+        "white"
+        "black")))
+
 (define incr-turn-count
   (λ ()
     (set! turn-count (add1 turn-count))))
@@ -665,7 +675,8 @@
 (define highlight-moves
   (λ (x y pieces)
     (let ([p (piece-at-xy x y pieces)])
-      (if p
+      (if (and p
+               (eqv? (piece-side p) (whose-turn)))
           (set! highlight-move-posns (get-all-possible-moves p pieces))
           #f))))
 
@@ -777,16 +788,15 @@
     (let* ([p-posn highlight-posn]
            [p (piece-at-xy (posn-x p-posn) (posn-y p-posn) pieces)])
       ; are we moving a valid piece, and are we going to a place we previously highlighted
-      (if (and p (xy-member-posn-ls? x y highlight-move-posns))
+      (if (and p
+               (eqv? (piece-side p) (whose-turn))
+               (xy-member-posn-ls? x y highlight-move-posns))
           (let ([pieces-along-path (pieces-in-range-posns p (posn x y) pieces)])
             (incr-turn-count)
-            (println pieces-along-path)
             (if (null? pieces-along-path)
                 (begin
-                  (println 'case1)
                   (cons (piece-copy-move x y p) (remove-piece p pieces)))
                 (begin
-                  (println 'case2)
                   (cons (piece-copy-move x y p) (remove-all-pieces pieces-along-path (remove-piece p pieces))))))
           pieces))))
 
