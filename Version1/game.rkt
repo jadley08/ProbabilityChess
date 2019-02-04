@@ -696,6 +696,12 @@
                      (cons (car pieces) (helper (cdr pieces)))]))])
         (helper pieces)))))
 
+(define remove-all-pieces
+  (λ (ls-p pieces)
+    (cond
+      [(null? ls-p) pieces]
+      [else (remove-all-pieces (cdr ls-p) (remove-piece (car ls-p) pieces))])))
+
 (define piece-copy-move
   (λ (x y p)
     (piece
@@ -765,8 +771,6 @@
                     [piece-at-cur-posn
                      (cons piece-at-cur-posn (helper-nonjump (+ x incr-x) (+ y incr-y)))]
                     [else (helper-nonjump (+ x incr-x) (+ y incr-y))])))])
-      (println incr-x)
-      (println incr-y)
       (if (pawn? p)
           (helper-pawn (posn-x p1) (posn-y p1))
           (if jump?
@@ -781,12 +785,14 @@
       (if (and p (xy-member-posn-ls? x y highlight-move-posns))
           (let ([pieces-along-path (pieces-in-range-posns p (posn x y) pieces)])
             (incr-turn-count)
-            (println "pieces-along-path:")
             (println pieces-along-path)
             (if (null? pieces-along-path)
-                (cons (piece-copy-move x y p) (remove-piece p pieces))
                 (begin
-                  (cons (piece-copy-move x y p) (remove-piece p pieces)))))
+                  (println 'case1)
+                  (cons (piece-copy-move x y p) (remove-piece p pieces)))
+                (begin
+                  (println 'case2)
+                  (cons (piece-copy-move x y p) (remove-all-pieces pieces-along-path (remove-piece p pieces))))))
           pieces))))
 
 
