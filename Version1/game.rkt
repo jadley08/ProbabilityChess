@@ -713,14 +713,80 @@
             turn-count))
          #f))))
 
+; any piece in path of straight line from (p1,p2].
+(define pieces-in-range-posns
+  (λ (p pos pieces)
+    (letrec ([jump? (move-type-knight? (piece-class p))]
+             [p1 (piece-location p)]
+             [p2 pos]
+             [p1-x (posn-x p1)]
+             [p1-y (posn-y p1)]
+             [p2-x (posn-x p2)]
+             [p2-y (posn-y p2)]
+             [incr-posn (let* ([dx (- p2-x p1-x)]
+                               [dy (- p2-y p1-y)]
+                               [same-abs? (eqv? (abs dx) (abs dy))]
+                               [one-zero? (if (or (eqv? dx 0)
+                                                  (eqv? dy 0))
+                                              #t
+                                              #f)]
+                               [x-dir (cond
+                                        [(< dx 0) -1]
+                                        [(eqv? dx 0) 0]
+                                        [(> dx 0) 1])]
+                               [y-dir (cond
+                                        [(< dy 0) -1]
+                                        [(eqv? dy 0) 0]
+                                        [(> dy 0) 1])])
+                          (if (or same-abs? one-zero?)
+                              (posn x-dir y-dir)
+                              (if (> (abs dx) (abs dy))
+                                  (posn (+ x-dir x-dir) y-dir)
+                                  (posn x-dir (+ y-dir y-dir)))))]
+             [incr-x (posn-x incr-posn)]
+             [incr-y (posn-y incr-posn)]
+             [helper-pawn
+              (λ (x y)
+                '())]
+             [helper-jump
+              (λ (x y)
+                '())]
+             [helper-nonjump
+              (λ (x y)
+                (let ([piece-at-cur-posn (piece-at-xy x y pieces)])
+                  (cond
+                    [(or (< x 0) (> x 7) (< y 0) (> x 7)) '()]
+                    [(and (not piece-at-cur-posn)
+                          (eqv? x p2-x) (eqv? y p2-y))
+                     '()]
+                    [(and piece-at-cur-posn
+                          (eqv? x p2-x) (eqv? y p2-y))
+                     (list piece-at-cur-posn)]
+                    [piece-at-cur-posn
+                     (cons piece-at-cur-posn (helper-nonjump (+ x incr-x) (+ y incr-y)))]
+                    [else (helper-nonjump (+ x incr-x) (+ y incr-y))])))])
+      (println incr-x)
+      (println incr-y)
+      (if (pawn? p)
+          (helper-pawn (posn-x p1) (posn-y p1))
+          (if jump?
+              (helper-jump (posn-x p1) (posn-y p1))
+              (helper-nonjump (+ (posn-x p1) incr-x) (+ (posn-y p1) incr-y)))))))
+
 (define move-piece
   (λ (x y pieces)
     (let* ([p-posn highlight-posn]
            [p (piece-at-xy (posn-x p-posn) (posn-y p-posn) pieces)])
+      ; are we moving a valid piece, and are we going to a place we previously highlighted
       (if (and p (xy-member-posn-ls? x y highlight-move-posns))
-          (begin
+          (let ([pieces-along-path (pieces-in-range-posns p (posn x y) pieces)])
             (incr-turn-count)
-            (cons (piece-copy-move x y p) (remove-piece p pieces)))
+            (println "pieces-along-path:")
+            (println pieces-along-path)
+            (if (null? pieces-along-path)
+                (cons (piece-copy-move x y p) (remove-piece p pieces))
+                (begin
+                  (cons (piece-copy-move x y p) (remove-piece p pieces)))))
           pieces))))
 
 
