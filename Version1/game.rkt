@@ -754,10 +754,7 @@
              [helper-pawn
               (λ (x y)
                 '())]
-             [helper-jump
-              (λ (x y)
-                '())]
-             [helper-nonjump
+             [helper-nonpawn
               (λ (x y)
                 (let ([piece-at-cur-posn (piece-at-xy x y pieces)])
                   (cond
@@ -769,13 +766,11 @@
                           (eqv? x p2-x) (eqv? y p2-y))
                      (list piece-at-cur-posn)]
                     [piece-at-cur-posn
-                     (cons piece-at-cur-posn (helper-nonjump (+ x incr-x) (+ y incr-y)))]
-                    [else (helper-nonjump (+ x incr-x) (+ y incr-y))])))])
+                     (cons piece-at-cur-posn (helper-nonpawn (+ x incr-x) (+ y incr-y)))]
+                    [else (helper-nonpawn (+ x incr-x) (+ y incr-y))])))])
       (if (pawn? p)
-          (helper-pawn (posn-x p1) (posn-y p1))
-          (if jump?
-              (helper-jump (posn-x p1) (posn-y p1))
-              (helper-nonjump (+ (posn-x p1) incr-x) (+ (posn-y p1) incr-y)))))))
+          (helper-pawn (+ (posn-x p1) incr-x) (+ (posn-y p1) incr-y))
+          (helper-nonpawn (+ (posn-x p1) incr-x) (+ (posn-y p1) incr-y))))))
 
 (define move-piece
   (λ (x y pieces)
