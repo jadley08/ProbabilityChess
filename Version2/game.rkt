@@ -897,29 +897,32 @@
                          [else (draw-square x y (get-square-color x y) (helper (add1 x) y))]))])
       (helper 0 0))))
 
+(define draw-piece
+  (λ (p board)
+    (let* ([p-loc (piece-location p)]
+           [p-x (posn-x p-loc)]
+           [p-y (posn-y p-loc)]
+           [p-side (piece-side p)]
+           [p-color (if (eqv? p-side "white")
+                        WHITE-PIECE-COLOR
+                        BLACK-PIECE-COLOR)]
+           [p-symbol (piece-symbol p)])
+      (place-image
+       (text
+        p-symbol
+        PIECE-SIZE
+        p-color)
+       (+ (* p-x SQUARE-DIM) OFFSET)
+       (+ (* p-y SQUARE-DIM) OFFSET)
+       board))))
+
 
 (define draw-board
   (λ (pieces)
     (cond
       [(null? pieces) (draw-empty-board)]
       [else
-       (let* ([p (car pieces)]
-              [p-loc (piece-location p)]
-              [p-x (posn-x p-loc)]
-              [p-y (posn-y p-loc)]
-              [p-side (piece-side p)]
-              [p-color (if (eqv? p-side "white")
-                           WHITE-PIECE-COLOR
-                           BLACK-PIECE-COLOR)]
-              [p-symbol (piece-symbol p)])
-         (place-image
-          (text
-           p-symbol
-           PIECE-SIZE
-           p-color)
-          (+ (* p-x SQUARE-DIM) OFFSET)
-          (+ (* p-y SQUARE-DIM) OFFSET)
-          (draw-board (cdr pieces))))])))
+       (draw-piece (car pieces) (draw-board (cdr pieces)))])))
 
    
 ;                                                      
