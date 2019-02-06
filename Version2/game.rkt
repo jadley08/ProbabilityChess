@@ -35,6 +35,8 @@
 (define BLACK-SQUARE-COLOR (make-color 34 139 34))
 (define BLACK-PIECE-COLOR "black")
 (define PIECE-SIZE (* SQUARE-DIM (/ 3 4)))
+(define PIECE-EXISTENCE-CIRCLE-RADIUS (/ (* SQUARE-DIM (/ 7 8)) 2))
+(define EXISTENCE-COLOR (make-color 128 0 0))
 (define turn "white")
 (define turn-count 0)
 
@@ -916,13 +918,31 @@
        (+ (* p-y SQUARE-DIM) OFFSET)
        board))))
 
+(define draw-existence-percentage
+  (λ (p board)
+    (let* ([p-loc (piece-location p)]
+           [p-x (posn-x p-loc)]
+           [p-y (posn-y p-loc)]
+           [p-probability-pct (piece-exist-pct p)])
+      (place-image
+       (circle
+        PIECE-EXISTENCE-CIRCLE-RADIUS
+        "outline"
+        EXISTENCE-COLOR)
+       (+ (* p-x SQUARE-DIM) OFFSET)
+       (+ (* p-y SQUARE-DIM) OFFSET)
+       board))))
 
 (define draw-board
   (λ (pieces)
     (cond
       [(null? pieces) (draw-empty-board)]
       [else
-       (draw-piece (car pieces) (draw-board (cdr pieces)))])))
+       (draw-existence-percentage
+        (car pieces)
+        (draw-piece
+         (car pieces)
+         (draw-board (cdr pieces))))])))
 
    
 ;                                                      
