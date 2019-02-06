@@ -46,6 +46,7 @@
 (define turn "white")
 (define turn-count 0)
 (define quantum #f)
+(define entangled-pieces-ls '())
 
 (define change-turn
   (λ ()
@@ -255,7 +256,7 @@
           "black"
           (posn 0 1)
           pawn-moves
-          50
+          100
           (pawns
            #f
            #f
@@ -275,7 +276,7 @@
           "black"
           (posn 2 1)
           pawn-moves
-          100
+          75
           (pawns
            #f
            #f
@@ -285,7 +286,7 @@
           "black"
           (posn 3 1)
           pawn-moves
-          100
+          75
           (pawns
            #f
            #f
@@ -739,6 +740,13 @@
             (eqv? y (posn-y (car posn-ls)))) #t]
       [else (xy-member-posn-ls? x y (cdr posn-ls))])))
 
+(define xy-member-piece-ls?
+  (λ (x y piece-ls)
+    (cond
+      [(null? piece-ls) #f]
+      [(and (eqv? x (posn-x (piece-location (car piece-ls))))) #t]
+      [else (xy-member-piece-ls? x y (cdr piece-ls))])))
+
 ;; is a posn a member of a list of posn
 (define member-posn-ls?
   (λ (psn posn-ls)
@@ -783,6 +791,34 @@
             (> (abs (- y (posn-y (piece-location p)))) 1)
             turn-count))
          #f))))
+
+(define piece-copy-move-pct
+  (λ (x y p pct)
+    (piece
+     (piece-name p)
+     (piece-symbol p)
+     (piece-side p)
+     (posn x y)
+     (piece-class p)
+     pct
+     (if (pawn? p)
+         (let ([info (piece-pawn-info p)])
+           (pawns
+            #t
+            (> (abs (- y (posn-y (piece-location p)))) 1)
+            turn-count))
+         #f))))
+
+(define piece-copy-change-pct
+  (λ (p pct)
+    (piece
+     (piece-name p)
+     (piece-symbol p)
+     (piece-side p)
+     (piece-location p)
+     (piece-class p)
+     pct
+     (piece-pawn-info p))))
 
 ; all pieces that would have to be captures for piece at p1 to move to p2
 (define pieces-in-range-posns
@@ -846,6 +882,22 @@
           (helper-pawn (+ (posn-x p1) incr-x) (+ (posn-y p1) incr-y))
           (helper-nonpawn (+ (posn-x p1) incr-x) (+ (posn-y p1) incr-y))))))
 
+(define entangle-pieces
+  (λ (x y p ls-p)
+    (letrec ([helper
+              (λ (ls-p percentage-moved)
+                (cond
+                  [(null? ls-p)
+                   (println percentage-moved)
+                   (list (piece-copy-move-pct x y p percentage-moved)
+                         (piece-copy-change-pct p (- (piece-exist-pct p) percentage-moved)))]
+                  [else
+                   (helper
+                    (cdr ls-p)
+                    (* percentage-moved
+                       (/ (- 100 (piece-exist-pct (car ls-p))) 100)))]))])
+      (helper ls-p (piece-exist-pct p)))))
+
 (define move-piece
   (λ (x y pieces)
     (let* ([p-posn highlight-posn]
@@ -857,10 +909,18 @@
           (let ([pieces-along-path (pieces-in-range-posns p (posn x y) pieces)])
             (incr-turn-count)
             (if (null? pieces-along-path)
-                (begin
-                  (cons (piece-copy-move x y p) (remove-piece p pieces)))
-                (begin
-                  (cons (piece-copy-move x y p) (remove-all-pieces pieces-along-path (remove-piece p pieces))))))
+                ; we can do a "normal"
+                (cons (piece-copy-move x y p) (remove-piece p pieces))
+                ; is there a piece where we are going?
+                (if (xy-member-piece-ls? x y pieces-along-path)
+                    ; there is a piece where we are going
+                    ; we may also go through a piece
+                    ; measurement
+                    (cons (piece-copy-move x y p) (remove-all-pieces pieces-along-path (remove-piece p pieces)))
+                    ; there is no piece where we are going
+                    ; but we go through a piece
+                    ; entanglement
+                    (append (entangle-pieces x y p pieces-along-path) (remove-piece p pieces)))))
           pieces))))
 
 
