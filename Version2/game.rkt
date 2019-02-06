@@ -873,7 +873,7 @@
 (define draw-square
   (λ (x y color board)
     (place-image
-     (square (/ WIDTH 8)
+     (square (/ WIDTH BOARD-WIDTH)
              "solid"
              color)
      (+ (* x SQUARE-DIM) OFFSET)
@@ -973,7 +973,7 @@
     (if (eqv? mouse-event "button-down")
         (let ([x (exact-floor (/ x SQUARE-DIM))]
               [y (exact-floor (/ y SQUARE-DIM))])
-          (if (and (< x 8) (> x -1) (< y 8) (> y -1))
+          (if (and (< x BOARD-WIDTH) (> x -1) (< y BOARD-HEIGHT) (> y -1))
               (if highlight
                   (begin
                     (set! highlight #f)
@@ -987,6 +987,33 @@
                     pieces))
               pieces))
         pieces)))
+
+                     
+;    ;                             
+;    ;                             
+;    ;     ;;                      
+;    ;    ;;                       
+;    ;   ;                         
+;    ;  ;          ;;;;;        ;  
+;    ; ;;         ;;   ;;  ;    ;  
+;    ;;;         ;     ;;  ;    ;  
+;    ;;          ;;;;;;    ;   ;;  
+;    ;;;         ;         ;   ;   
+;    ;;;;;       ;         ;  ;;   
+;    ;  ;;;      ;;     ;  ; ; ;   
+;    ;;   ;;;     ;   ;;    ;;  ;; 
+;    ;;      ;;    ;;;;       ;;;  
+;     ;                      ;; ;  
+;     ;                      ;  ;  
+;                            ;; ;  
+;                             ;;;  
+(define key-controls
+  (λ (pieces key)
+    (cond
+      [(key=? key "q") '()]
+      [(key=? key "r") board-init]
+      [else pieces])))
+
 
        
 ;                                                                                  
@@ -1008,8 +1035,9 @@
 ;                     ;;  ;                                                  ;;  ; 
 ;                       ;;;                                                    ;;; 
 (big-bang board-init
-          (to-draw draw-board)
-          (on-mouse mouse-controls))
+  (to-draw draw-board)
+  (on-mouse mouse-controls)
+  (on-key key-controls))
 
 
                                       
