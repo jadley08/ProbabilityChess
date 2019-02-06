@@ -534,13 +534,9 @@
 ;                             ;                                
 ;                             ;                                
 ;                             ;
-(define white-turn?
-  (λ ()
-    (eqv? 0 (modulo turn-count 2))))
-
 (define whose-turn
   (λ ()
-    (if white-turn?
+    (if (eqv? 0 (modulo turn-count 2))
         "white"
         "black")))
 
@@ -704,8 +700,7 @@
 (define highlight-moves
   (λ (x y pieces)
     (let ([p (piece-at-xy x y pieces)])
-      (if (and p
-               (eqv? (piece-side p) (whose-turn)))
+      (if (and p (eqv? (piece-side p) (whose-turn)))
           (set! highlight-move-posns (get-all-possible-moves p pieces))
           #f))))
 
