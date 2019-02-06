@@ -4,7 +4,7 @@
   2htdp/batch-io
   2htdp/image
   2htdp/universe
-  unstable/custom-write)
+  racket/struct)
 
 
 ;                                           ;                          ;           
@@ -71,13 +71,29 @@
    class
    exist-pct
    pawn-info)
-  #:property prop:auto-custom-write 'constructor)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (λ (p) 'piece)
+      (λ (p) (list (piece-name p)
+                        (piece-symbol p)
+                        (piece-side p)
+                        (piece-location p)
+                        (piece-class p)
+                        (piece-exist-pct p)
+                        (piece-pawn-info p)))))])
 
 (struct pawns
   (moved?
    double-move-last-turn?
    turn-of-double)
-  #:property prop:auto-custom-write 'constructor)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (λ (p) 'pawns)
+      (λ (p) (list (pawns-moved? p)
+                        (pawns-double-move-last-turn? p)
+                        (pawns-turn-of-double p)))))])
 
 (struct move-type
   (pawn?
@@ -85,12 +101,25 @@
    diagonal?
    knight?
    range)
-  #:property prop:auto-custom-write 'constructor)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (λ (p) 'move-type)
+      (λ (p) (list (move-type-pawn? p)
+                        (move-type-perpendicular? p)
+                        (move-type-diagonal? p)
+                        (move-type-knight? p)
+                        (move-type-range p)))))])
 
 (struct posn
   (x
    y)
-  #:property prop:auto-custom-write 'constructor)
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (λ (p) 'posn)
+      (λ (p) (list (posn-x p)
+                   (posn-y p)))))])
 
                                                                                                   
 ;                                                                                                                   
