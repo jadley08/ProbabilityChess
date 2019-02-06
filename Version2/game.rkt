@@ -33,14 +33,16 @@
 (define SQUARE-DIM (/ WIDTH 8))
 (define OFFSET (/ SQUARE-DIM 2))
 (define WHITE-SQUARE-COLOR (make-color 240 255 240))
-(define WHITE-PIECE-COLOR (make-color 245 245 220))
+(define WHITE-PIECE-COLOR (make-color 255 255 255))
+(define WHITE-PIECE-SHADOW-COLOR (make-color 0 0 0))
+(define QUANTUM-WHITE-SQUARE-COLOR (make-color 240 128 128))
+(define QUANTUM-BLACK-SQUARE-COLOR (make-color 47 79 79))
 (define BLACK-SQUARE-COLOR (make-color 34 139 34))
-(define BLACK-PIECE-COLOR "black")
+(define BLACK-PIECE-COLOR (make-color 0 0 0))
 (define PIECE-SIZE (* SQUARE-DIM (/ 3 4)))
 (define PIECE-EXISTENCE-CIRCLE-RADIUS (/ (* SQUARE-DIM (/ 7 8)) 2))
 (define EXISTENCE-COLOR (make-color 128 0 0))
 (define EXISTENCE-PADDING (exact-round (/ SQUARE-DIM 20)))
-;(define EXISTENCE-TEXT-SIZE (exact-round (/ SQUARE-DIM 8)))
 (define turn "white")
 (define turn-count 0)
 (define quantum #f)
@@ -551,8 +553,8 @@
 (define swap-quantum
   (λ ()
     (if quantum
-        #f
-        #t)))
+        (set! quantum #f)
+        (set! quantum #t))))
 
 (define whose-turn
   (λ ()
@@ -880,8 +882,12 @@
 (define get-square-color
   (λ (x y)
     (if (even? (+ x y))
-        WHITE-SQUARE-COLOR
-        BLACK-SQUARE-COLOR)))
+        (if quantum
+            QUANTUM-WHITE-SQUARE-COLOR
+            WHITE-SQUARE-COLOR)
+        (if quantum
+            QUANTUM-BLACK-SQUARE-COLOR
+            BLACK-SQUARE-COLOR))))
 
 (define draw-square
   (λ (x y color board)
@@ -932,7 +938,16 @@
         p-color)
        (+ (* p-x SQUARE-DIM) OFFSET)
        (+ (* p-y SQUARE-DIM) OFFSET)
-       board))))
+       (if (eqv? p-side "white")
+        (place-image
+         (text
+          p-symbol
+          (+ 4 PIECE-SIZE)
+          WHITE-PIECE-SHADOW-COLOR)
+         (+ (* p-x SQUARE-DIM) OFFSET)
+         (+ (* p-y SQUARE-DIM) OFFSET)
+         board)
+        board)))))
 
 (define draw-existence-percentage
   (λ (p board)
@@ -1023,7 +1038,9 @@
 (define key-controls
   (λ (pieces key)
     (cond
-      [(key=? key "q") (swap-quantum)] ; swap quantum mode
+      [(key=? key "q")
+       (swap-quantum)
+       pieces] ; swap quantum mode
       [(key=? key "r")
        (restart)
        board-init] ; restart the game
