@@ -255,7 +255,7 @@
           "black"
           (posn 0 1)
           pawn-moves
-          100
+          50
           (pawns
            #f
            #f
@@ -624,9 +624,12 @@
                                        (helper next-x next-y (sub1 range-left)))
                                  '())]
                     [else (if piece-at-next
-                              (if can-move-next
-                                  (list next-posn)
-                                  '())
+                              (if (eqv? (piece-exist-pct piece-at-next) 100)
+                                  (if can-move-next
+                                      (list next-posn)
+                                      '())
+                                  (cons next-posn
+                                        (helper next-x next-y (sub1 range-left))))
                               (cons next-posn
                                     (helper next-x next-y (sub1 range-left))))])))])
       (helper (posn-x (piece-location p)) (posn-y (piece-location p)) (move-type-range (piece-class p))))))
