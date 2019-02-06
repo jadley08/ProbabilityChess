@@ -761,7 +761,7 @@
             turn-count))
          #f))))
 
-; any piece in path of straight line from (p1,p2].
+; all pieces that would have to be captures for piece at p1 to move to p2
 (define pieces-in-range-posns
   (λ (p pos pieces)
     (letrec ([jump? (move-type-knight? (piece-class p))]
@@ -795,7 +795,16 @@
              [incr-y (posn-y incr-posn)]
              [helper-pawn
               (λ (x y)
-                '())]
+                (let ([piece-going-to (piece-at-posn p2 pieces)])
+                  (cond
+                    [(zero? incr-x) '()] ;we are just progressing forwards, so no pieces need to be removed
+                    [piece-going-to
+                     (list piece-going-to)] ; this is a "regular" capture
+                    [else (let ([en-passant-pawn (piece-at-xy p2-x p1-y pieces)])
+                            (if en-passant-pawn
+                                (list en-passant-pawn)
+                                '()))] ; we are taking diagonally and there is no piece where we are going: must be en-passant
+                    )))]
              [helper-nonpawn
               (λ (x y)
                 (let ([piece-at-cur-posn (piece-at-xy x y pieces)])
@@ -819,9 +828,9 @@
     (let* ([p-posn highlight-posn]
            [p (piece-at-xy (posn-x p-posn) (posn-y p-posn) pieces)])
       ; are we moving a valid piece, and are we going to a place we previously highlighted
-      (if (and p
-               (eqv? (piece-side p) (whose-turn))
-               (xy-member-posn-ls? x y highlight-move-posns))
+      (if (and p ;there is a piece at our x y
+               (eqv? (piece-side p) (whose-turn)) ;the piece is of the correct colour given whose turn it is
+               (xy-member-posn-ls? x y highlight-move-posns)) ;it is a possible move that we highlighted
           (let ([pieces-along-path (pieces-in-range-posns p (posn x y) pieces)])
             (incr-turn-count)
             (if (null? pieces-along-path)
