@@ -5,7 +5,8 @@
   2htdp/image
   2htdp/universe
   racket/struct
-  racket/format)
+  racket/format
+  graphics/graphics)
 
 
 ;                                           ;                          ;           
@@ -42,14 +43,13 @@
 ;(define EXISTENCE-TEXT-SIZE (exact-round (/ SQUARE-DIM 8)))
 (define turn "white")
 (define turn-count 0)
+(define quantum #f)
 
 (define change-turn
   (λ ()
     (if (eqv? turn "white")
         (set! turn "black")
         (set! turn "white"))))
-
-
 
 
 ;                                                              
@@ -153,6 +153,13 @@
 (define highlight #f)
 (define highlight-posn (posn -1 -1))
 (define highlight-move-posns '())
+
+(define restart
+  (λ ()
+    (set! turn "white")
+    (set! turn-count 0)
+    (set! quantum #f)
+    (set! highlight #f)))
 
 
 (define knight-moves
@@ -541,6 +548,12 @@
 ;                             ;                                
 ;                             ;                                
 ;                             ;
+(define swap-quantum
+  (λ ()
+    (if quantum
+        #f
+        #t)))
+
 (define whose-turn
   (λ ()
     (if (eqv? 0 (modulo turn-count 2))
@@ -1010,8 +1023,10 @@
 (define key-controls
   (λ (pieces key)
     (cond
-      [(key=? key "q") '()]
-      [(key=? key "r") board-init]
+      [(key=? key "q") (swap-quantum)] ; swap quantum mode
+      [(key=? key "r")
+       (restart)
+       board-init] ; restart the game
       [else pieces])))
 
 
