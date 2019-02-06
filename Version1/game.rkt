@@ -26,6 +26,8 @@
 ;
 (define WIDTH 800)
 (define HEIGHT WIDTH)
+(define BOARD-WIDTH 8)
+(define BOARD-HEIGHT 8)
 (define SQUARE-DIM (/ WIDTH 8))
 (define OFFSET (/ SQUARE-DIM 2))
 (define WHITE-SQUARE-COLOR (make-color 240 255 240))
@@ -596,7 +598,7 @@
                                           (not (same-side p piece-at-next))
                                           #t)])
                   (cond
-                    [(or (< x 0) (> x 7) (< y 0) (> y 7) (eqv? range-left 0)) '()]
+                    [(or (< x 0) (> x (sub1 BOARD-WIDTH)) (< y 0) (> y (sub1 BOARD-HEIGHT)) (eqv? range-left 0)) '()]
                     [knight? (if can-move-next
                                  (cons next-posn
                                        (helper next-x next-y (sub1 range-left)))
@@ -697,6 +699,7 @@
                        (append perpendicular-moves diagonal-moves knight-moves))]))])
         (helper)))))
 
+;; highlight all possible moves for a piece at a given x y and a list of pieces
 (define highlight-moves
   (λ (x y pieces)
     (let ([p (piece-at-xy x y pieces)])
@@ -704,6 +707,7 @@
           (set! highlight-move-posns (get-all-possible-moves p pieces))
           #f))))
 
+;; is a x y value a member of a list of posn if represented as a posn
 (define xy-member-posn-ls?
   (λ (x y posn-ls)
     (cond
@@ -712,10 +716,12 @@
             (eqv? y (posn-y (car posn-ls)))) #t]
       [else (xy-member-posn-ls? x y (cdr posn-ls))])))
 
+;; is a posn a member of a list of posn
 (define member-posn-ls?
   (λ (psn posn-ls)
     (xy-member-posn-ls? (posn-x psn) (posn-y psn) posn-ls)))
 
+;; remove a piece from a list of pieces
 (define remove-piece
   (λ (p pieces)
     (let ([p-x (posn-x (piece-location p))]
@@ -731,6 +737,7 @@
                      (cons (car pieces) (helper (cdr pieces)))]))])
         (helper pieces)))))
 
+;; remove a list of pieces from a list of pieces
 (define remove-all-pieces
   (λ (ls-p pieces)
     (cond
@@ -793,7 +800,7 @@
               (λ (x y)
                 (let ([piece-at-cur-posn (piece-at-xy x y pieces)])
                   (cond
-                    [(or (< x 0) (> x 7) (< y 0) (> x 7)) '()]
+                    [(or (< x 0) (> x (sub1 BOARD-WIDTH)) (< y 0) (> y (sub1 BOARD-HEIGHT))) '()]
                     [(and (not piece-at-cur-posn)
                           (eqv? x p2-x) (eqv? y p2-y))
                      '()]
@@ -863,8 +870,8 @@
   (λ ()
     (letrec ([helper (λ (x y)
                        (cond
-                         [(> y 7) (empty-scene WIDTH HEIGHT)]
-                         [(> x 7) (helper 0 (add1 y))]
+                         [(> y (sub1 BOARD-HEIGHT)) (empty-scene WIDTH HEIGHT)]
+                         [(> x (sub1 BOARD-WIDTH)) (helper 0 (add1 y))]
                          [(and highlight
                                (eqv? x (posn-x highlight-posn))
                                (eqv? y (posn-y highlight-posn))
