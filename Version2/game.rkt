@@ -4,7 +4,8 @@
   2htdp/batch-io
   2htdp/image
   2htdp/universe
-  racket/struct)
+  racket/struct
+  racket/format)
 
 
 ;                                           ;                          ;           
@@ -37,6 +38,8 @@
 (define PIECE-SIZE (* SQUARE-DIM (/ 3 4)))
 (define PIECE-EXISTENCE-CIRCLE-RADIUS (/ (* SQUARE-DIM (/ 7 8)) 2))
 (define EXISTENCE-COLOR (make-color 128 0 0))
+(define EXISTENCE-PADDING (exact-round (/ SQUARE-DIM 20)))
+;(define EXISTENCE-TEXT-SIZE (exact-round (/ SQUARE-DIM 8)))
 (define turn "white")
 (define turn-count 0)
 
@@ -925,11 +928,12 @@
            [p-y (posn-y p-loc)]
            [p-probability-pct (piece-exist-pct p)])
       (place-image
-       (circle
-        PIECE-EXISTENCE-CIRCLE-RADIUS
-        "outline"
+       (rectangle
+        EXISTENCE-PADDING
+        (* (- SQUARE-DIM (* 2 EXISTENCE-PADDING)) (/ p-probability-pct 100))
+        "solid"
         EXISTENCE-COLOR)
-       (+ (* p-x SQUARE-DIM) OFFSET)
+       (+ (* p-x SQUARE-DIM) EXISTENCE-PADDING)
        (+ (* p-y SQUARE-DIM) OFFSET)
        board))))
 
